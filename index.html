@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DAREMAXXING — X Dare Score Calculator</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Grotesk:wght@300;400;500;600;700&family=Syne+Mono&display=swap" rel="stylesheet">
+<style>
+:root{--red:#FF1E1E;--red2:#FF4500;--dark:#060608;--dark2:#0D0D12;--card:#111118;--border:#1E1E2E;--glow:#FF1E1E40;--white:#F0EEF8;--muted:#666680;--gold:#FFD700;--cyan:#00FFCC;--green:#00FF88;--purple:#CC00FF;}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{background:var(--dark);color:var(--white);font-family:'Space Grotesk',sans-serif;overflow-x:hidden;cursor:none;}
+@media(max-width:600px){body{cursor:auto;}.cur,.cur-dot{display:none;}}
+
+/* CURSOR */
+.cur{position:fixed;width:18px;height:18px;border:2px solid var(--red);border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);transition:all .07s ease;mix-blend-mode:difference;}
+.cur-dot{position:fixed;width:5px;height:5px;background:var(--red);border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);}
+
+/* NOISE */
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none;z-index:100;opacity:0.3;}
+
+/* GRID */
+.bg-grid{position:fixed;inset:0;background-image:linear-gradient(rgba(255,30,30,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,30,30,0.025) 1px,transparent 1px);background-size:50px 50px;animation:gridMove 30s linear infinite;pointer-events:none;z-index:0;}
+@keyframes gridMove{to{transform:translateY(50px);}}
+
+/* PARTICLES */
+.particles{position:fixed;inset:0;pointer-events:none;z-index:1;overflow:hidden;}
+.p{position:absolute;border-radius:50%;animation:pFloat linear infinite;opacity:0;}
+@keyframes pFloat{0%{transform:translateY(100vh) translateX(0);opacity:0;}10%{opacity:0.9;}90%{opacity:0.3;}100%{transform:translateY(-10vh) translateX(var(--drift));opacity:0;}}
+
+/* TICKER */
+.ticker{background:var(--red);padding:9px 0;overflow:hidden;white-space:nowrap;position:relative;z-index:10;}
+.ticker-inner{display:inline-flex;animation:tick 28s linear infinite;gap:55px;}
+@keyframes tick{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+.ti{font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:3px;color:#fff;display:inline-flex;align-items:center;gap:10px;}
+
+/* HEADER */
+header{position:sticky;top:0;z-index:50;padding:15px 36px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);backdrop-filter:blur(20px);background:rgba(6,6,8,0.88);}
+@media(max-width:600px){header{padding:12px 18px;}}
+.logo{display:flex;align-items:center;gap:11px;text-decoration:none;}
+.logo-icon{width:36px;height:36px;background:var(--red);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:17px;animation:pulse 2s ease infinite;}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 var(--glow)}50%{box-shadow:0 0 22px 9px var(--glow)}}
+.logo-text{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;background:linear-gradient(135deg,var(--red),var(--red2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+nav a{color:var(--muted);text-decoration:none;margin-left:22px;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;transition:color .2s;}
+nav a:hover{color:var(--white);}
+@media(max-width:480px){nav a{margin-left:12px;font-size:10px;}}
+
+/* HERO */
+.hero{position:relative;z-index:5;text-align:center;padding:60px 20px 40px;}
+.hero-tag{display:inline-block;background:var(--glow);border:1px solid var(--red);color:var(--red);padding:5px 15px;border-radius:100px;font-size:11px;letter-spacing:3px;text-transform:uppercase;margin-bottom:18px;animation:fD .6s ease both;}
+.hero-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(68px,13vw,165px);line-height:.88;letter-spacing:5px;background:linear-gradient(135deg,#fff 0%,#FF1E1E 45%,#FF4500 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:fD .6s .1s ease both;}
+.hero-sub{font-size:16px;color:var(--muted);margin-top:16px;animation:fD .6s .2s ease both;max-width:420px;margin-left:auto;margin-right:auto;}
+@keyframes fD{from{opacity:0;transform:translateY(-16px)}to{opacity:1;transform:translateY(0)}}
+
+/* DEVIL MASCOT */
+.mascot-wrap{position:relative;width:160px;margin:24px auto;animation:floatD 3s ease-in-out infinite;}
+@keyframes floatD{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-13px) rotate(2deg)}}
+.mascot{width:100%;filter:drop-shadow(0 0 28px #FF1E1E88);}
+.fire-row{position:absolute;bottom:-14px;left:50%;transform:translateX(-50%);display:flex;gap:4px;}
+.flame{width:9px;border-radius:50% 50% 20% 20%;background:linear-gradient(to top,var(--red2),var(--gold),transparent);animation:flk linear infinite;transform-origin:bottom;}
+@keyframes flk{0%,100%{transform:scaleY(1) rotate(-4deg);opacity:1}50%{transform:scaleY(0.75) rotate(5deg);opacity:.85}}
+
+/* MAIN SECTION */
+.section{position:relative;z-index:5;max-width:780px;margin:0 auto;padding:0 18px 65px;}
+.card{background:var(--card);border:1px solid var(--border);border-radius:22px;padding:38px;position:relative;overflow:hidden;}
+@media(max-width:600px){.card{padding:24px 18px;border-radius:18px;}}
+.card::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at top,rgba(255,30,30,.07) 0%,transparent 60%);pointer-events:none;}
+.card::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--red),transparent);animation:scan 3s ease-in-out infinite;}
+@keyframes scan{0%{opacity:0;transform:scaleX(0)}50%{opacity:1;transform:scaleX(1)}100%{opacity:0;transform:scaleX(0)}}
+.card-title{font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:3px;margin-bottom:7px;}
+.card-desc{color:var(--muted);font-size:13px;margin-bottom:28px;line-height:1.7;}
+
+/* INPUT */
+.inp-wrap{position:relative;margin-bottom:14px;}
+.inp-at{position:absolute;left:16px;top:50%;transform:translateY(-50%);color:var(--red);font-size:19px;font-weight:700;z-index:2;}
+.usr-input{width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:13px;padding:17px 17px 17px 40px;color:var(--white);font-family:'Space Grotesk',sans-serif;font-size:18px;outline:none;transition:all .3s;}
+.usr-input:focus{border-color:var(--red);box-shadow:0 0 0 3px var(--glow);background:rgba(255,30,30,.04);}
+.usr-input::placeholder{color:var(--muted);}
+.calc-btn{width:100%;background:linear-gradient(135deg,var(--red),var(--red2));border:none;border-radius:13px;padding:18px;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:21px;letter-spacing:3px;cursor:pointer;transition:all .3s;position:relative;overflow:hidden;}
+.calc-btn::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,transparent 30%,rgba(255,255,255,.12) 50%,transparent 70%);transform:translateX(-100%);transition:transform .5s;}
+.calc-btn:hover::before{transform:translateX(100%);}
+.calc-btn:hover{transform:translateY(-2px);box-shadow:0 10px 35px var(--glow);}
+.calc-btn:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+
+/* LOADING */
+.load-sec{display:none;padding:48px 0;text-align:center;}
+.load-sec.active{display:block;}
+.load-ring{width:64px;height:64px;border:3px solid var(--border);border-top-color:var(--red);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 20px;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.load-steps{display:flex;flex-direction:column;gap:8px;max-width:260px;margin:0 auto;text-align:left;}
+.lstep{font-family:'Syne Mono',monospace;font-size:12px;color:var(--muted);display:flex;align-items:center;gap:8px;opacity:0;transition:opacity .4s;}
+.lstep.active{opacity:1;color:var(--green);}
+.lstep.done{opacity:.4;color:var(--muted);}
+.sdot{width:5px;height:5px;border-radius:50%;background:currentColor;flex-shrink:0;}
+
+/* RESULTS */
+.res-sec{display:none;margin-top:32px;}
+.res-sec.active{display:block;}
+
+/* USER PROFILE CARD */
+.user-card{display:flex;align-items:center;gap:16px;margin-bottom:26px;padding:16px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:16px;}
+.u-avatar{width:58px;height:58px;border-radius:50%;border:3px solid var(--red);object-fit:cover;flex-shrink:0;}
+.u-avatar-ph{width:58px;height:58px;border-radius:50%;border:3px solid var(--red);background:var(--glow);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;flex-shrink:0;}
+.u-info{flex:1;min-width:0;}
+.u-name{font-weight:700;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.u-handle{color:var(--muted);font-size:12px;}
+.u-bio{font-size:12px;color:var(--muted);margin-top:3px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.u-stats{display:flex;gap:14px;margin-top:6px;flex-wrap:wrap;}
+.u-stat{font-size:12px;}
+.u-stat b{color:var(--white);font-weight:700;}
+.u-stat span{color:var(--muted);}
+
+/* SCORE RING */
+.score-display{text-align:center;margin-bottom:28px;}
+.ring-wrap{position:relative;width:180px;height:180px;margin:0 auto 14px;}
+.ring-bg{fill:none;stroke:var(--border);stroke-width:12;}
+.ring-fill{fill:none;stroke-width:12;stroke-linecap:round;stroke-dasharray:534;stroke-dashoffset:534;transition:stroke-dashoffset 2.2s cubic-bezier(.34,1.56,.64,1);transform:rotate(-90deg);transform-origin:100px 100px;}
+.score-num{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+.s-val{font-family:'Bebas Neue',sans-serif;font-size:55px;line-height:1;background:linear-gradient(135deg,var(--white),var(--red));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.s-lbl{font-size:9px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;}
+.rank-badge{display:inline-block;background:linear-gradient(135deg,var(--red),var(--red2));padding:9px 26px;border-radius:100px;font-family:'Bebas Neue',sans-serif;font-size:21px;letter-spacing:2px;box-shadow:0 4px 22px var(--glow);animation:rankPop .6s cubic-bezier(.34,1.56,.64,1) both;}
+@keyframes rankPop{from{transform:scale(0.3);opacity:0}to{transform:scale(1);opacity:1}}
+.rank-desc{color:var(--muted);font-size:13px;margin-top:7px;}
+.pct-wrap{margin-top:14px;}
+.pct-row{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:5px;}
+.pct-bar{height:7px;background:var(--border);border-radius:100px;overflow:hidden;}
+.pct-fill{height:100%;background:linear-gradient(90deg,var(--red),var(--gold));border-radius:100px;width:0;transition:width 2s cubic-bezier(.34,1.56,.64,1);}
+
+/* STATS GRID */
+.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:11px;margin:22px 0;}
+@media(max-width:480px){.stats-grid{grid-template-columns:1fr 1fr;}}
+.st-card{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:14px;padding:16px;text-align:center;opacity:0;transform:translateY(14px);transition:all .5s;}
+.st-card.visible{opacity:1;transform:translateY(0);}
+.st-card:hover{border-color:var(--red);background:rgba(255,30,30,.05);}
+.st-icon{font-size:22px;margin-bottom:6px;}
+.st-lbl{font-size:10px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:3px;}
+.st-val{font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--white);}
+.st-sub{font-size:11px;color:var(--muted);margin-top:2px;}
+
+/* BREAKDOWN */
+.bd-card{background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:14px;padding:20px;margin:18px 0;}
+.bd-title{font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:2px;margin-bottom:14px;color:var(--muted);}
+.bd-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04);}
+.bd-row:last-child{border-bottom:none;}
+.bd-left{}
+.bd-name{font-size:13px;color:var(--muted);}
+.bd-note{font-size:11px;color:rgba(102,102,128,.6);}
+.bd-pts{font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--white);}
+.bd-pts.hi{color:var(--red);}
+.bd-total{margin-top:10px;padding-top:14px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
+.bd-total-l{font-weight:700;font-size:15px;}
+.bd-total-v{font-family:'Bebas Neue',sans-serif;font-size:30px;color:var(--red);}
+
+/* DARE LIST */
+.dare-title{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;margin-bottom:13px;display:flex;align-items:center;gap:10px;}
+.dare-title::after{content:'';flex:1;height:1px;background:var(--border);}
+.dare-item{background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:9px;opacity:0;transform:translateX(-14px);transition:all .4s;}
+.dare-item.visible{opacity:1;transform:translateX(0);}
+.dare-item:hover{border-color:var(--red);transform:translateX(4px);}
+.di-row{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;}
+.di-left{flex:1;min-width:0;}
+.di-name{font-size:14px;font-weight:600;margin-bottom:4px;}
+.di-tags{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:4px;}
+.di-diff{display:inline-block;padding:2px 8px;border-radius:100px;font-size:10px;letter-spacing:1px;text-transform:uppercase;}
+.diff-easy{background:rgba(0,255,136,.1);color:var(--green);border:1px solid rgba(0,255,136,.2);}
+.diff-med{background:rgba(255,200,0,.1);color:#FFC800;border:1px solid rgba(255,200,0,.2);}
+.diff-hard{background:rgba(255,30,30,.1);color:var(--red);border:1px solid rgba(255,30,30,.2);}
+.diff-extreme{background:rgba(200,0,255,.1);color:var(--purple);border:1px solid rgba(200,0,255,.2);}
+.diff-legend{background:rgba(255,215,0,.15);color:var(--gold);border:1px solid rgba(255,215,0,.3);}
+.di-engmt{font-size:11px;color:var(--muted);}
+.di-tweet{font-size:11px;color:rgba(102,102,128,.8);font-style:italic;margin-top:4px;line-height:1.4;word-break:break-word;}
+.di-pts{font-family:'Bebas Neue',sans-serif;font-size:24px;color:var(--red);flex-shrink:0;}
+.no-dares{text-align:center;padding:30px;color:var(--muted);font-size:14px;line-height:1.6;}
+
+/* SHARE */
+.share-row{margin-top:24px;display:flex;gap:10px;flex-wrap:wrap;}
+.s-btn{flex:1;min-width:120px;border:1px solid #333;border-radius:12px;padding:13px 14px;color:#fff;font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;transition:all .3s;background:#000;}
+.s-btn:hover{border-color:#fff;transform:translateY(-2px);}
+.s-btn.xbtn{background:linear-gradient(135deg,var(--red),var(--red2));border:none;flex:2;}
+.s-btn.xbtn:hover{box-shadow:0 8px 28px var(--glow);}
+
+/* ERROR */
+.err{background:rgba(255,30,30,.08);border:1px solid rgba(255,30,30,.3);border-radius:11px;padding:13px 17px;color:var(--red);font-size:13px;margin-top:13px;display:none;line-height:1.5;}
+.err.active{display:block;}
+
+/* LEADERBOARD */
+.lb-sec{position:relative;z-index:5;max-width:880px;margin:0 auto;padding:0 18px 80px;}
+.lb-hdr{text-align:center;margin-bottom:30px;}
+.lb-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(48px,9vw,100px);letter-spacing:4px;background:linear-gradient(135deg,var(--gold),var(--red));-webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1;}
+.lb-sub{color:var(--muted);font-size:13px;margin-top:5px;}
+.lb-wrap{background:var(--card);border:1px solid var(--border);border-radius:20px;overflow:hidden;}
+.lb-row{display:grid;grid-template-columns:52px 1fr 75px 100px 85px;align-items:center;padding:13px 20px;border-bottom:1px solid var(--border);transition:all .2s;opacity:0;transform:translateX(-18px);}
+.lb-row.visible{opacity:1;transform:translateX(0);}
+.lb-row:last-child{border-bottom:none;}
+.lb-row:hover:not(.hdr){background:rgba(255,30,30,.04);}
+.hdr{background:rgba(255,30,30,.04);opacity:1!important;transform:none!important;font-size:10px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;}
+@media(max-width:580px){.lb-row{grid-template-columns:44px 1fr 70px 78px;padding:11px 13px;}.hm{display:none;}}
+.lb-rank{font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--muted);}
+.lb-rank.r1{color:var(--gold);text-shadow:0 0 16px var(--gold);}
+.lb-rank.r2{color:#C0C0C0;}
+.lb-rank.r3{color:#CD7F32;}
+.lb-user{display:flex;align-items:center;gap:10px;min-width:0;}
+.lb-av{width:32px;height:32px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;}
+.lb-info{min-width:0;}
+.lb-name{font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.lb-handle{font-size:10px;color:var(--muted);}
+.lb-badge{font-size:9px;background:var(--glow);color:var(--red);border:1px solid rgba(255,30,30,.3);padding:2px 5px;border-radius:100px;margin-top:2px;display:inline-block;}
+.lb-score{font-family:'Bebas Neue',sans-serif;font-size:18px;text-align:right;}
+.lb-pct{font-size:11px;color:var(--cyan);text-align:right;}
+.lb-dares{font-size:12px;text-align:right;color:var(--muted);}
+.lb-you{background:linear-gradient(135deg,rgba(255,30,30,.08),rgba(255,69,0,.04))!important;border-left:3px solid var(--red)!important;}
+.lb-empty{text-align:center;padding:48px 20px;color:var(--muted);}
+.lb-empty div{font-size:40px;margin-bottom:12px;}
+
+/* MODAL */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:500;display:none;align-items:center;justify-content:center;backdrop-filter:blur(12px);padding:20px;}
+.modal-bg.active{display:flex;}
+.sc-modal{background:var(--dark2);border:1px solid var(--border);border-radius:24px;padding:36px 30px;max-width:420px;width:100%;position:relative;overflow:hidden;text-align:center;}
+.sc-glow{position:absolute;inset:0;background:radial-gradient(ellipse at center,rgba(255,30,30,.1) 0%,transparent 70%);pointer-events:none;}
+.sc-close{position:absolute;top:14px;right:14px;background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;transition:color .2s;z-index:1;}
+.sc-close:hover{color:var(--white);}
+.sc-brand{font-family:'Bebas Neue',sans-serif;font-size:12px;letter-spacing:3px;color:var(--red);margin-bottom:14px;}
+.sc-user{font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:2px;}
+.sc-score{font-family:'Bebas Neue',sans-serif;font-size:100px;line-height:1;background:linear-gradient(135deg,var(--white),var(--red));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.sc-rank{font-family:'Bebas Neue',sans-serif;font-size:24px;color:var(--gold);margin-bottom:12px;}
+.sc-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:14px 0;}
+.sc-stat{background:rgba(255,255,255,.04);border-radius:10px;padding:10px 5px;}
+.sc-sv{font-family:'Bebas Neue',sans-serif;font-size:20px;}
+.sc-sl{font-size:9px;letter-spacing:1px;color:var(--muted);text-transform:uppercase;}
+.sc-pct{font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:2px;color:var(--muted);margin-top:4px;}
+.sc-footer{font-size:10px;color:var(--muted);margin-top:12px;}
+.sc-share{margin-top:16px;width:100%;background:linear-gradient(135deg,var(--red),var(--red2));border:none;border-radius:11px;padding:13px;color:#fff;font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:600;cursor:pointer;transition:all .3s;}
+.sc-share:hover{box-shadow:0 6px 24px var(--glow);transform:translateY(-2px);}
+
+/* FLOATY */
+.ef{position:fixed;font-size:26px;pointer-events:none;animation:eu 3s ease forwards;z-index:200;}
+@keyframes eu{0%{transform:translateY(0) scale(1) rotate(0);opacity:1}100%{transform:translateY(-270px) scale(.3) rotate(360deg);opacity:0}}
+.cp{position:fixed;width:8px;height:8px;pointer-events:none;z-index:200;animation:cf linear forwards;}
+@keyframes cf{0%{transform:translateY(-8px) rotate(0);opacity:1}100%{transform:translateY(100vh) rotate(720deg);opacity:0}}
+
+::-webkit-scrollbar{width:5px;}
+::-webkit-scrollbar-track{background:var(--dark);}
+::-webkit-scrollbar-thumb{background:var(--red);border-radius:100px;}
+</style>
+</head>
+<body>
+
+<div class="cur" id="cur"></div>
+<div class="cur-dot" id="curD"></div>
+<div class="bg-grid"></div>
+<div class="particles" id="ptcls"></div>
+
+<!-- TICKER -->
+<div class="ticker">
+  <div class="ticker-inner">
+    <span class="ti">😈 REAL X DATA — ZERO FAKING</span>
+    <span class="ti">🔥 DARE OR DON'T EXIST</span>
+    <span class="ti">💀 HOW MANY DARES DID YOU ACTUALLY DO?</span>
+    <span class="ti">⚡ EVERY @DAREMARKET TAG EARNS POINTS</span>
+    <span class="ti">👑 DARE MAXIMUS AWAITS THE BRAVE</span>
+    <span class="ti">😈 REAL X DATA — ZERO FAKING</span>
+    <span class="ti">🔥 DARE OR DON'T EXIST</span>
+    <span class="ti">💀 HOW MANY DARES DID YOU ACTUALLY DO?</span>
+    <span class="ti">⚡ EVERY @DAREMARKET TAG EARNS POINTS</span>
+    <span class="ti">👑 DARE MAXIMUS AWAITS THE BRAVE</span>
+  </div>
+</div>
+
+<header>
+  <a class="logo" href="#">
+    <div class="logo-icon">😈</div>
+    <div class="logo-text">DAREMAXXING</div>
+  </a>
+  <nav>
+    <a href="#calc">CALC</a>
+    <a href="#lb">BOARD</a>
+    <a href="https://app.dare.market" target="_blank">APP ↗</a>
+  </nav>
+</header>
+
+<section class="hero">
+  <div class="hero-tag">😈 X-POWERED • REAL TWEETS • REAL SCORES</div>
+  <div class="hero-title">DARE<br>MAXXING</div>
+
+  <div class="mascot-wrap">
+    <svg class="mascot" viewBox="0 0 200 210" xmlns="http://www.w3.org/2000/svg">
+      <defs><radialGradient id="bg" cx="50%" cy="60%" r="55%"><stop offset="0%" stop-color="#FF3333"/><stop offset="100%" stop-color="#CC0000"/></radialGradient></defs>
+      <path d="M155 150 Q195 130 190 100 Q185 72 172 82" stroke="#CC0000" stroke-width="9" fill="none" stroke-linecap="round"/>
+      <polygon points="172,82 182,68 160,76" fill="#CC0000"/>
+      <circle cx="100" cy="110" r="68" fill="url(#bg)"/>
+      <path d="M65 55 L42 12 L74 46" fill="#CC0000"/>
+      <path d="M135 55 L158 12 L126 46" fill="#CC0000"/>
+      <path d="M67 52 L50 22 L71 46" fill="#FF4444" opacity=".4"/>
+      <path d="M133 52 L150 22 L129 46" fill="#FF4444" opacity=".4"/>
+      <ellipse cx="80" cy="95" rx="15" ry="15" fill="#0a0a0a"/>
+      <ellipse cx="120" cy="95" rx="15" ry="15" fill="#0a0a0a"/>
+      <ellipse cx="83" cy="93" rx="5" ry="6" fill="white"/>
+      <ellipse cx="123" cy="93" rx="5" ry="6" fill="white"/>
+      <ellipse cx="85" cy="95" rx="4" ry="4" fill="#FF0000"/>
+      <ellipse cx="125" cy="95" rx="4" ry="4" fill="#FF0000"/>
+      <ellipse cx="86" cy="94" rx="1.5" ry="1.5" fill="white" opacity=".8"/>
+      <ellipse cx="126" cy="94" rx="1.5" ry="1.5" fill="white" opacity=".8"/>
+      <path d="M67 80 Q80 72 93 77" stroke="#0a0a0a" stroke-width="4" fill="none" stroke-linecap="round"/>
+      <path d="M107 77 Q120 72 133 80" stroke="#0a0a0a" stroke-width="4" fill="none" stroke-linecap="round"/>
+      <path d="M72 125 Q100 148 128 125" stroke="#0a0a0a" stroke-width="4" fill="none" stroke-linecap="round"/>
+      <path d="M76 128 L83 136 L92 127 L100 136 L108 127 L117 136 L124 128" stroke="#0a0a0a" stroke-width="2.5" fill="none"/>
+      <circle cx="38" cy="130" r="16" fill="#CC0000"/>
+      <circle cx="162" cy="130" r="16" fill="#CC0000"/>
+    </svg>
+    <div class="fire-row">
+      <div class="flame" style="height:26px;animation-duration:.7s;animation-delay:0s"></div>
+      <div class="flame" style="height:38px;animation-duration:.5s;animation-delay:.1s"></div>
+      <div class="flame" style="height:32px;animation-duration:.85s;animation-delay:.2s"></div>
+      <div class="flame" style="height:40px;animation-duration:.6s;animation-delay:.05s"></div>
+      <div class="flame" style="height:28px;animation-duration:.75s;animation-delay:.15s"></div>
+    </div>
+  </div>
+
+  <p class="hero-sub">Enter any X username. We scan real tweets. Find real dares. Score everything.</p>
+</section>
+
+<!-- CALCULATOR -->
+<div class="section" id="calc">
+  <div class="card">
+    <div class="card-title">CALCULATE YOUR DARESCORE</div>
+    <p class="card-desc">We scan tweets for every @daremarket tag, #daremaxxing post, and detect which of the 16 official dares you've actually done — scored by difficulty. Any X username works.</p>
+
+    <div class="inp-wrap">
+      <span class="inp-at">@</span>
+      <input class="usr-input" id="uIn" type="text" placeholder="any X username" autocomplete="off" spellcheck="false"/>
+    </div>
+    <button class="calc-btn" id="calcBtn" onclick="runCalc()">😈 CALCULATE MY DARESCORE</button>
+
+    <div class="err" id="errBox"></div>
+
+    <div class="load-sec" id="loadSec">
+      <div class="load-ring"></div>
+      <div class="load-steps">
+        <div class="lstep" id="ls1"><span class="sdot"></span> Finding <span id="scanUser" style="color:var(--red)">user</span> on X...</div>
+        <div class="lstep" id="ls2"><span class="sdot"></span> Fetching recent tweets...</div>
+        <div class="lstep" id="ls3"><span class="sdot"></span> Scanning for dare keywords...</div>
+        <div class="lstep" id="ls4"><span class="sdot"></span> Scoring dare difficulty...</div>
+        <div class="lstep" id="ls5"><span class="sdot"></span> Locking in leaderboard...</div>
+      </div>
+    </div>
+
+    <div class="res-sec" id="resSec">
+
+      <!-- PROFILE -->
+      <div class="user-card" id="userCard"></div>
+
+      <!-- SCORE -->
+      <div class="score-display">
+        <div class="ring-wrap">
+          <svg viewBox="0 0 200 200" width="180" height="180">
+            <circle class="ring-bg" cx="100" cy="100" r="85"/>
+            <circle class="ring-fill" id="ringFill" cx="100" cy="100" r="85" stroke="var(--red)"/>
+          </svg>
+          <div class="score-num">
+            <div class="s-val" id="scoreVal">0</div>
+            <div class="s-lbl">DARESCORE</div>
+          </div>
+        </div>
+        <div class="rank-badge" id="rankBadge">—</div>
+        <div class="rank-desc" id="rankDesc"></div>
+        <div class="pct-wrap">
+          <div class="pct-row"><span>DAREMAXXING LEVEL</span><span id="pctNum">0%</span></div>
+          <div class="pct-bar"><div class="pct-fill" id="pctFill"></div></div>
+        </div>
+      </div>
+
+      <!-- STATS -->
+      <div class="stats-grid" id="statsGrid"></div>
+
+      <!-- BREAKDOWN -->
+      <div class="bd-card" id="bdCard"></div>
+
+      <!-- DARES -->
+      <div class="dare-title">🔥 DARES FOUND ON X</div>
+      <div id="dareList"></div>
+
+      <!-- SHARE -->
+      <div class="share-row">
+        <button class="s-btn" onclick="showModal()">📋 SCORE CARD</button>
+        <button class="s-btn xbtn" onclick="shareX()">𝕏 FLEX ON X</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- LEADERBOARD -->
+<div class="lb-sec" id="lb">
+  <div class="lb-hdr">
+    <div class="lb-title">DAREBOARD</div>
+    <p class="lb-sub">Global rankings based on real X data</p>
+  </div>
+  <div class="lb-wrap">
+    <div class="lb-row hdr">
+      <div>#</div>
+      <div>DAREDEVIL</div>
+      <div class="hm" style="text-align:right">DARES</div>
+      <div style="text-align:right">SCORE</div>
+      <div style="text-align:right">MAXXING%</div>
+    </div>
+    <div id="lbBody"><div class="lb-empty"><div>😈</div>No daredevils yet — calculate your score first!</div></div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-bg" id="modal">
+  <div class="sc-modal">
+    <div class="sc-glow"></div>
+    <button class="sc-close" onclick="closeModal()">✕</button>
+    <div class="sc-brand">😈 DAREMAXXING — POWERED BY REAL X DATA</div>
+    <div class="sc-user" id="scUser">@username</div>
+    <div class="sc-score" id="scScore">0</div>
+    <div class="sc-rank" id="scRank">DARE ROOKIE</div>
+    <div class="sc-stats" id="scStats"></div>
+    <div class="sc-pct" id="scPct">0% DAREMAXXING</div>
+    <div class="sc-footer">@daremarket • #daremaxxing • app.dare.market</div>
+    <button class="sc-share" onclick="shareX()">𝕏 SHARE THIS TO X</button>
+  </div>
+</div>
+
+<script>
+// ─── STATE ───
+let cur = null, curD = null, currentResult = null;
+let leaderboard = JSON.parse(localStorage.getItem('dm_xonly_v1') || '[]');
+
+const RANKS = [
+  {min:0,    name:'Dare Rookie',    emoji:'🥚', desc:'Just hatched. The dare world awaits.'},
+  {min:200,  name:'Dare Beginner',  emoji:'🐣', desc:'Taking first steps into chaos.'},
+  {min:500,  name:'Dare Player',    emoji:'🎮', desc:'You\'ve got game. Keep going.'},
+  {min:900,  name:'Dare Challenger',emoji:'⚔️', desc:'You challenge the norm. Respect.'},
+  {min:1400, name:'Dare Hustler',   emoji:'💰', desc:'Grinding dares like a lifestyle.'},
+  {min:2000, name:'Dare Warrior',   emoji:'🛡️', desc:'Battle-tested. Unbreakable.'},
+  {min:3000, name:'Dare Addict',    emoji:'🔥', desc:'Can\'t stop. Won\'t stop.'},
+  {min:4500, name:'Dare Beast',     emoji:'🦁', desc:'Feared in the dare ecosystem.'},
+  {min:6500, name:'Daredevil',      emoji:'😈', desc:'Elite. You define the meta.'},
+  {min:9000, name:'Dare Maximus',   emoji:'👑', desc:'PEAK DAREMAXXING. Eternal legend.'},
+];
+function getRank(s){let r=RANKS[0];for(const rk of RANKS)if(s>=rk.min)r=rk;return r;}
+function fmt(n){if(!n)return'0';if(n>=1e6)return(n/1e6).toFixed(1)+'M';if(n>=1000)return(n/1000).toFixed(1)+'K';return''+n;}
+function delay(ms){return new Promise(r=>setTimeout(r,ms));}
+
+// ─── CURSOR ───
+window.addEventListener('load',()=>{
+  cur=document.getElementById('cur');
+  curD=document.getElementById('curD');
+  document.addEventListener('mousemove',e=>{
+    if(cur){cur.style.left=e.clientX+'px';cur.style.top=e.clientY+'px';}
+    if(curD){curD.style.left=e.clientX+'px';curD.style.top=e.clientY+'px';}
+  });
+});
+
+// ─── PARTICLES ───
+(function(){
+  const c=document.getElementById('ptcls');
+  const emojis=['🔥','😈','💀','⚡','👑'];
+  for(let i=0;i<30;i++){
+    const p=document.createElement('div');
+    p.className='p';
+    if(Math.random()>.72){
+      p.textContent=emojis[Math.floor(Math.random()*emojis.length)];
+      p.style.cssText=`left:${Math.random()*100}vw;font-size:${Math.random()*14+9}px;animation-duration:${Math.random()*10+5}s;animation-delay:${Math.random()*10}s;--drift:${Math.random()*80-40}px;width:auto;height:auto;`;
+    }else{
+      p.style.cssText=`left:${Math.random()*100}vw;width:${Math.random()*3+2}px;height:${Math.random()*3+2}px;background:${Math.random()>.6?'#FFD700':'#FF1E1E'};animation-duration:${Math.random()*8+4}s;animation-delay:${Math.random()*8}s;--drift:${Math.random()*60-30}px;`;
+    }
+    c.appendChild(p);
+  }
+})();
+
+// ─── MAIN CALC ───
+async function runCalc(){
+  const username=document.getElementById('uIn').value.trim().replace('@','');
+  if(!username)return showErr('Enter an X username!');
+
+  const btn=document.getElementById('calcBtn');
+  btn.disabled=true;
+  hideErr();
+  document.getElementById('resSec').classList.remove('active');
+  document.getElementById('loadSec').classList.add('active');
+  document.getElementById('scanUser').textContent=username;
+
+  // Step animation
+  const steps=['ls1','ls2','ls3','ls4','ls5'];
+  let si=0;
+  const st=setInterval(()=>{
+    if(si>0)document.getElementById(steps[si-1]).classList.replace('active','done');
+    if(si<steps.length)document.getElementById(steps[si]).classList.add('active');
+    si++;
+    if(si>=steps.length)clearInterval(st);
+  },700);
+
+  try{
+    const res=await fetch(`/api/score/${encodeURIComponent(username)}`);
+    const data=await res.json();
+    clearInterval(st);
+
+    if(!res.ok){
+      document.getElementById('loadSec').classList.remove('active');
+      btn.disabled=false;
+      return showErr(data.error||'Failed to fetch X data');
+    }
+
+    currentResult=data;
+
+    // Update leaderboard
+    const rank=getRank(data.score);
+    const entry={username:data.username,displayName:data.displayName,score:data.score,percentage:data.percentage,rank:rank.name,rankEmoji:rank.emoji,totalDaresFound:data.totalDaresFound,followers:data.followers};
+    const idx=leaderboard.findIndex(u=>u.username.toLowerCase()===username.toLowerCase());
+    if(idx>=0)leaderboard[idx]=entry;
+    else leaderboard.push(entry);
+    localStorage.setItem('dm_xonly_v1',JSON.stringify(leaderboard));
+
+    await delay(400);
+    document.getElementById('loadSec').classList.remove('active');
+    displayResults(data);
+    renderLB();
+    celebrate();
+    setTimeout(()=>document.getElementById('lb').scrollIntoView({behavior:'smooth',block:'start'}),2800);
+
+  }catch(e){
+    clearInterval(st);
+    document.getElementById('loadSec').classList.remove('active');
+    showErr('Cannot connect to server. Make sure you ran: npm install && npm start');
+  }
+  btn.disabled=false;
+}
+
+// ─── DISPLAY ───
+function displayResults(d){
+  document.getElementById('resSec').classList.add('active');
+
+  // Profile
+  const uc=document.getElementById('userCard');
+  uc.innerHTML=`
+    ${d.profileImage?`<img class="u-avatar" src="${d.profileImage}" alt="" onerror="this.style.display='none'">`:
+    `<div class="u-avatar-ph">${(d.displayName||d.username).charAt(0)}</div>`}
+    <div class="u-info">
+      <div class="u-name">${d.displayName||d.username}</div>
+      <div class="u-handle">@${d.username}</div>
+      ${d.bio?`<div class="u-bio">${d.bio.slice(0,100)}</div>`:''}
+      <div class="u-stats">
+        <div class="u-stat"><b>${fmt(d.followers)}</b> <span>followers</span></div>
+        <div class="u-stat"><b>${fmt(d.tweetCount)}</b> <span>tweets</span></div>
+        <div class="u-stat"><b>${d.scannedTweets}</b> <span>scanned</span></div>
+      </div>
+    </div>`;
+
+  // Ring
+  const off=534-Math.min((d.score/10000)*534,534);
+  setTimeout(()=>document.getElementById('ringFill').style.strokeDashoffset=Math.max(off,0),100);
+  animCount('scoreVal',0,d.score,2000);
+
+  const rank=getRank(d.score);
+  document.getElementById('rankBadge').textContent=rank.emoji+' '+rank.name;
+  document.getElementById('rankDesc').textContent=rank.desc;
+  setTimeout(()=>{
+    document.getElementById('pctFill').style.width=d.percentage+'%';
+    document.getElementById('pctNum').textContent=d.percentage+'%';
+  },300);
+
+  // Stats
+  const sg=document.getElementById('statsGrid');
+  const cards=[
+    {icon:'😈',lbl:'Dares Detected',val:d.totalDaresFound,sub:'from your X posts'},
+    {icon:'🐦',lbl:'@daremarket Tags',val:d.dareMarketMentions,sub:`+${d.dareMarketMentions*80}pts total`},
+    {icon:'💀',lbl:'#daremaxxing Posts',val:d.daremaxxingMentions,sub:`+${d.daremaxxingMentions*120}pts total`},
+    {icon:'🔥',lbl:'Dare Tweets',val:d.dareMentions,sub:'general dare activity'},
+    {icon:'👥',lbl:'Follower Bonus',val:'+'+d.breakdown.followerBonus,sub:`${fmt(d.followers)} followers`},
+    {icon:'⚡',lbl:'Tweets Scanned',val:d.scannedTweets,sub:'recent tweets'},
+  ];
+  sg.innerHTML=cards.map((c,i)=>`
+    <div class="st-card" style="transition-delay:${i*.07}s">
+      <div class="st-icon">${c.icon}</div>
+      <div class="st-lbl">${c.lbl}</div>
+      <div class="st-val">${c.val}</div>
+      <div class="st-sub">${c.sub}</div>
+    </div>`).join('');
+  setTimeout(()=>document.querySelectorAll('.st-card').forEach((c,i)=>setTimeout(()=>c.classList.add('visible'),i*70)),200);
+
+  // Breakdown
+  const bk=d.breakdown;
+  document.getElementById('bdCard').innerHTML=`
+    <div class="bd-title">SCORE BREAKDOWN</div>
+    ${bRow('😈 @daremarket Mentions',`${d.dareMarketMentions} × 80 pts`,bk.dareMarketScore)}
+    ${bRow('💀 #daremaxxing Tags',`${d.daremaxxingMentions} × 120 pts`,bk.daremaxxingScore)}
+    ${bRow('🔥 General Dare Tweets',`${d.dareMentions} × 15 pts (max 30)`,bk.dareMentionScore)}
+    ${bRow('🎯 Specific Dares Done',`${d.totalDaresFound} dares detected`,bk.daresScore,true)}
+    ${bRow('👥 Follower Influence',`${fmt(d.followers)} followers ÷ 100`,bk.followerBonus)}
+    <div class="bd-total">
+      <div class="bd-total-l">TOTAL DARESCORE</div>
+      <div class="bd-total-v">${d.score.toLocaleString()}</div>
+    </div>`;
+
+  // Dare list
+  const dl=document.getElementById('dareList');
+  if(!d.daresFound?.length){
+    dl.innerHTML=`<div class="no-dares">😈 No specific dares detected in your scanned tweets.<br><span style="font-size:12px;color:var(--muted)">Do a dare, post about it on X tagging @daremarket, then recalculate!</span></div>`;
+  }else{
+    dl.innerHTML=d.daresFound.map((dr,i)=>`
+      <div class="dare-item" style="transition-delay:${i*.07}s">
+        <div class="di-row">
+          <div class="di-left">
+            <div class="di-name">${dr.label}</div>
+            <div class="di-tags">
+              <span class="di-diff diff-${dr.diff}">${dr.diff}</span>
+              ${dr.likes>0?`<span class="di-engmt">❤️ ${dr.likes}</span>`:''}
+              ${dr.retweets>0?`<span class="di-engmt">🔁 ${dr.retweets}</span>`:''}
+            </div>
+            ${dr.tweetSnippet?`<div class="di-tweet">"${dr.tweetSnippet}${dr.tweetSnippet.length>=140?'...':''}"</div>`:''}
+          </div>
+          <div class="di-pts">+${dr.pts}</div>
+        </div>
+      </div>`).join('');
+    setTimeout(()=>document.querySelectorAll('.dare-item').forEach((el,i)=>setTimeout(()=>el.classList.add('visible'),i*80)),400);
+  }
+}
+
+function bRow(label,note,pts,hi=false){
+  return`<div class="bd-row">
+    <div class="bd-left"><div class="bd-name">${label}</div><div class="bd-note">${note}</div></div>
+    <div class="bd-pts${hi?' hi':''}">${pts>0?'+':''}${pts}</div>
+  </div>`;
+}
+
+// ─── LEADERBOARD ───
+function renderLB(){
+  const body=document.getElementById('lbBody');
+  const sorted=[...leaderboard].sort((a,b)=>b.score-a.score);
+  if(!sorted.length){body.innerHTML='<div class="lb-empty"><div>😈</div>No daredevils yet — calculate your score first!</div>';return;}
+  const cols=['#FF1E1E','#FF4500','#FFD700','#00FFCC','#CC00FF'];
+  body.innerHTML=sorted.map((u,i)=>{
+    const isYou=currentResult&&u.username.toLowerCase()===currentResult.username.toLowerCase();
+    const rk=i===0?'r1':i===1?'r2':i===2?'r3':'';
+    const icon=i===0?'👑':i===1?'🥈':i===2?'🥉':'#'+(i+1);
+    const col=cols[i%cols.length];
+    return`<div class="lb-row${isYou?' lb-you':''}" style="transition-delay:${i*.04}s">
+      <div class="lb-rank ${rk}">${icon}</div>
+      <div class="lb-user">
+        <div class="lb-av" style="border-color:${col};background:${col}22">${(u.username||'?').charAt(0).toUpperCase()}</div>
+        <div class="lb-info">
+          <div class="lb-name">${isYou?'⭐ ':''}${u.displayName||u.username}</div>
+          <div class="lb-handle">@${u.username}</div>
+          <span class="lb-badge">${u.rankEmoji} ${u.rank}</span>
+        </div>
+      </div>
+      <div class="lb-dares hm">${u.totalDaresFound||0}</div>
+      <div class="lb-score">${(u.score||0).toLocaleString()}</div>
+      <div class="lb-pct">${u.percentage||0}%</div>
+    </div>`;
+  }).join('');
+  setTimeout(()=>document.querySelectorAll('.lb-row:not(.hdr)').forEach((r,i)=>setTimeout(()=>r.classList.add('visible'),i*50)),100);
+}
+
+// ─── MODAL ───
+function showModal(){
+  if(!currentResult)return;
+  const d=currentResult;const rank=getRank(d.score);
+  document.getElementById('scUser').textContent='@'+d.username;
+  document.getElementById('scScore').textContent=d.score.toLocaleString();
+  document.getElementById('scRank').textContent=rank.emoji+' '+rank.name;
+  document.getElementById('scPct').textContent=d.percentage+'% DAREMAXXING';
+  document.getElementById('scStats').innerHTML=`
+    <div class="sc-stat"><div class="sc-sv">${d.totalDaresFound}</div><div class="sc-sl">Dares</div></div>
+    <div class="sc-stat"><div class="sc-sv">${d.dareMarketMentions}</div><div class="sc-sl">DM Tags</div></div>
+    <div class="sc-stat"><div class="sc-sv">${fmt(d.followers)}</div><div class="sc-sl">Followers</div></div>`;
+  document.getElementById('modal').classList.add('active');
+}
+function closeModal(){document.getElementById('modal').classList.remove('active');}
+document.getElementById('modal').addEventListener('click',e=>{if(e.target.id==='modal')closeModal();});
+
+// ─── SHARE ───
+function shareX(){
+  if(!currentResult)return;
+  const d=currentResult;const rank=getRank(d.score);
+  const top3=d.daresFound?.slice(0,3).map(dr=>dr.label).join(', ')||'';
+  const t=`${rank.emoji} I'm a ${rank.name} on DAREMAXXING 😈\n\n🔥 Score: ${d.score.toLocaleString()}\n💀 Dares detected: ${d.totalDaresFound}\n🐦 @daremarket mentions: ${d.dareMarketMentions}\n⚡ ${d.percentage}% DAREMAXXING${top3?`\n\n🎯 Top dares: ${top3}`:''}\n\n@daremarket #daremaxxing #daremarket`;
+  window.open('https://twitter.com/intent/tweet?text='+encodeURIComponent(t),'_blank');
+}
+
+// ─── UTILS ───
+function animCount(id,from,to,dur){
+  const el=document.getElementById(id);
+  const start=Date.now();
+  const tick=()=>{const p=Math.min((Date.now()-start)/dur,1);const e=1-Math.pow(1-p,4);el.textContent=Math.round(from+(to-from)*e).toLocaleString();if(p<1)requestAnimationFrame(tick);};
+  requestAnimationFrame(tick);
+}
+function showErr(msg){const b=document.getElementById('errBox');b.textContent='⚠️ '+msg;b.classList.add('active');}
+function hideErr(){document.getElementById('errBox').classList.remove('active');}
+
+function celebrate(){
+  const emojis=['😈','🔥','💀','⚡','🏆','👑','💪'];
+  for(let i=0;i<12;i++){
+    setTimeout(()=>{
+      const el=document.createElement('div');el.className='ef';
+      el.textContent=emojis[Math.floor(Math.random()*emojis.length)];
+      el.style.cssText=`left:${Math.random()*window.innerWidth}px;bottom:20%;font-size:${Math.random()*18+18}px;animation-duration:${Math.random()*2+2}s;`;
+      document.body.appendChild(el);setTimeout(()=>el.remove(),4000);
+    },i*110);
+  }
+  const cols=['#FF1E1E','#FFD700','#FF4500','#00FFCC','#fff','#CC00FF'];
+  for(let i=0;i<35;i++){
+    setTimeout(()=>{
+      const c=document.createElement('div');c.className='cp';
+      c.style.cssText=`left:${Math.random()*100}vw;top:-8px;background:${cols[Math.floor(Math.random()*cols.length)]};border-radius:${Math.random()>.5?'50%':'0'};animation-duration:${Math.random()*2+2}s;animation-delay:${Math.random()*0.5}s;`;
+      document.body.appendChild(c);setTimeout(()=>c.remove(),5000);
+    },i*55);
+  }
+}
+
+document.getElementById('uIn').addEventListener('keydown',e=>{if(e.key==='Enter')runCalc();});
+renderLB();
+</script>
+</body>
+</html>
