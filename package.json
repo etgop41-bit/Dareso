@@ -1,0 +1,15 @@
+{
+  "name": "daremaxxing",
+  "version": "3.0.0",
+  "description": "DAREMAXXING - Free web scraping dare score calculator",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "axios": "^1.6.0",
+    "cheerio": "^1.0.0",
+    "node-cache": "^5.1.2"
+  }
+}
